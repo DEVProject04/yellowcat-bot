@@ -1,53 +1,49 @@
-const { Client, Intents, MessageEmbed } = require('discord.js');
-const { SlashCommandBuilder, Embed } = require('@discordjs/builders');
+const fs = require('fs');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { clientId, guildId, token, color } = require('./config.json');
+const { Client, Collection, Intents } = require('discord.js');
+const { clientId, guildId, token } = require('./config.json');
+const { load } = require('dotenv');
 
-const client = new Client({ intents: [Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+client.commands = new Collection();
 
-const commands = [
-	new SlashCommandBuilder().setName('ping').setDescription('You can ping pong with my bot!'),
-    new SlashCommandBuilder().setName('pong').setDescription('You can ping pong with my bot!'),
-]
-	.map(command => command.toJSON());
+const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+	const event = require(`./src/events/${file}`);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
+
+const commands = []
+const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const command = require(`./src/commands/${file}`);
+	console.log(`Loaded ${command.data.name}!`);
+	client.commands.set(command.data.name, command);
+	commands.push(command.data.toJSON());
+}
 
 const rest = new REST({ version: '9' }).setToken(token);
 
-rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
-	.then(() => console.log("Successfully registered application commands."))
-	.catch(console.error);
+(async () => {
+	try {
+		console.log('Started refreshing application (/) commands.');
 
-client.once('ready', () => {
-	console.log(`Logined for ${client.user.username}#${client.user.discriminator}`);
-});
+		await rest.put(
+			Routes.applicationGuildCommands(clientId, guildId),
+			{ body: commands },
+		);
 
-client.on("interactionCreate", async interaction => {
-    if (!interaction.isCommand()) return;
-
-    const { commandName } = interaction;
-
-    switch (commandName) {
-        case "ping":
-            const pingEmbed = new MessageEmbed()
-                .setColor(color)
-			    .setTitle(':ping_pong: Pong!')
-			    .setDescription(`${client.ws.ping}ms`)
-                .setFooter(`${interaction.user.username}#${interaction.user.discriminator}`, interaction.user.avatarURL());
-
-		    await interaction.reply({ embeds: [pingEmbed] });
-            break;
-
-        case "pong":
-            const pongEmbed = new MessageEmbed()
-                .setColor(color)
-			    .setTitle(':ping_pong: Ping!')
-			    .setDescription(`${client.ws.ping}ms`)
-                .setFooter(`${interaction.user.username}#${interaction.user.discriminator}`, interaction.user.avatarURL());
-
-		    await interaction.reply({ embeds: [pongEmbed] });
-            break;
-    }
-});
+		console.log('Successfully reloaded application (/) commands.');
+	} catch (error) {
+		console.error(error);
+	}
+})();
 
 client.login(token);
