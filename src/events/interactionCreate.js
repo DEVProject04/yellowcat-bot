@@ -2,7 +2,7 @@ const { MessageEmbed } = require("discord.js");
 
 module.exports = {
 	name: 'interactionCreate',
-    execute(interaction) {
+    async execute(interaction) {
 	    if (!interaction.isCommand()) return;
 
 		const command = interaction.client.commands.get(interaction.commandName);
@@ -19,7 +19,7 @@ module.exports = {
 				.setFooter(`${interaction.user.username}#${interaction.user.discriminator}`, interaction.user.avatarURL())
 				.setColor("#FF0000");
 
-			interaction.reply({ embeds: [errEmbed], ephemeral: true });
+			await interaction.reply({ embeds: [errEmbed], ephemeral: true });
 		}
     }
 }
