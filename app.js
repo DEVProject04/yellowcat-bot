@@ -28,6 +28,7 @@ for (const file of commandFiles) {
 	const command = require(`./src/commands/${file}`);
 	console.log(`Loaded ${command.data.name}!`);
 	client.commands.set(command.data.name, command);
+
 	commands.push(command.data.toJSON());
 }
 
