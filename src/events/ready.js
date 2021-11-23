@@ -1,4 +1,4 @@
-const { version } = require("../../config.json");
+const { version } = require("../config/config.json");
 
 module.exports = {
 	name: 'ready',

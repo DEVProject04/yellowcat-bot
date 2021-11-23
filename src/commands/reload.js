@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { MessageEmbed } = require("discord.js");
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { color, bot_owner } = require('../../config.json');
+const { color, bot_owner } = require('../config/config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
