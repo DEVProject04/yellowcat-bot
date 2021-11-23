@@ -1,6 +1,6 @@
 const { MessageEmbed } = require("discord.js");
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { color, devId } = require('../config/config.json');
+const { color, bot_owner } = require('../config/config.json');
 
 const clean = async (text) => {
     if (text && text.constructor.name == "Promise")
@@ -23,7 +23,7 @@ module.exports = {
         .setDescription("Bot owner function")
         .addStringOption(option => option.setName("code").setDescription("js 코드를 입력해 주세요!").setRequired(true)),
     async execute(interaction) {
-        if (interaction.user.id === devId) {
+        if (interaction.user.id === bot_owner) {
             let code = interaction.options.getString("code")
 
             try {
@@ -55,7 +55,7 @@ module.exports = {
         } else {
             const errorEmbed = new MessageEmbed()
                 .setTitle(":octagonal_sign: Error!")
-                .setDescription("당신은 관리자가 아닙니다!")
+                .setDescription("You're not bot owner!")
                 .setColor(color)
                 .setFooter(interaction.user.tag, interaction.user.avatarURL());
 
